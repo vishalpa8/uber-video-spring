@@ -1,10 +1,15 @@
 package com.personal.uber_video.response;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.Data;
+import lombok.*;
+
 import java.time.LocalDateTime;
 
 @Data
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class UserResponseDto {
     private Long id;
     private String first_name;

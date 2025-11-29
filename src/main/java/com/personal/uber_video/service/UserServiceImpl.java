@@ -2,6 +2,7 @@ package com.personal.uber_video.service;
 
 import com.personal.uber_video.dto.UserRegistrationDto;
 import com.personal.uber_video.exception.ApiException;
+import com.personal.uber_video.response.ApiResponse;
 import com.personal.uber_video.response.UserResponseDto;
 import com.personal.uber_video.entity.User;
 import com.personal.uber_video.repository.UserRepository;
@@ -10,7 +11,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -44,7 +47,24 @@ public class UserServiceImpl implements UserService{
         return response;
     }
 
-    private static UserResponseDto getUserResponseDto(User savedUser) {
+    @Override
+    public List<UserResponseDto> getRegisteredUsers() {
+        if(userRepository.count() == 0){
+            throw new ApiException("Currently there is not register user");
+        }
+        return userRepository.findAll().stream()
+                .map(this::getUserResponseDto)
+                .toList();
+    }
+
+    @Override
+    public void deleteUser(Long id) {
+        userRepository.findById(id).
+                orElseThrow(() -> new ApiException("User not found with id: " + id));
+        userRepository.deleteById(id);
+    }
+
+    private UserResponseDto getUserResponseDto(User savedUser) {
         UserResponseDto userResponse = new UserResponseDto();
         userResponse.setId(savedUser.getId());
         userResponse.setFirst_name(savedUser.getFirstName());

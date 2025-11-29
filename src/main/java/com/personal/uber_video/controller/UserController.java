@@ -1,6 +1,7 @@
 package com.personal.uber_video.controller;
 
 import com.personal.uber_video.dto.UserRegistrationDto;
+import com.personal.uber_video.response.UserResponseDto;
 import com.personal.uber_video.service.UserServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,5 +26,19 @@ public class UserController {
     public ResponseEntity<?> registerUser(@Valid @RequestBody UserRegistrationDto registrationDto) {
         var response = userServiceImpl.registerUser(registrationDto);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @GetMapping
+    public ResponseEntity<?> getAllUsers() {
+        var response = userServiceImpl.getRegisteredUsers();
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+        userServiceImpl.deleteUser(id);
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "User deleted successfully");
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }
