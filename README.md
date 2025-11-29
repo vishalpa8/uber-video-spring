@@ -144,20 +144,26 @@ curl -X POST http://localhost:4000/users/register -H "Content-Type: application/
 ```
 src/main/java/com/personal/uber_video/
 ├── UberVideoApplication.java
-├── config/
-│   └── SecurityConfig.java
 ├── controller/
 │   └── UserController.java
 ├── dto/
 │   ├── FullNameDto.java
-│   ├── UserRegistrationDto.java
-│   └── UserResponseDto.java
+│   └── UserRegistrationDto.java
 ├── entity/
 │   └── User.java
+├── exception/
+│   ├── ApiException.java
+│   └── GlobalExceptionHandler.java
 ├── repository/
 │   └── UserRepository.java
+├── response/
+│   ├── ApiResponse.java
+│   └── UserResponseDto.java
+├── security/
+│   └── SecurityConfig.java
 ├── service/
-│   └── UserService.java
+│   ├── UserService.java
+│   └── UserServiceImpl.java
 └── util/
     └── JwtUtil.java
 ```
@@ -180,6 +186,7 @@ src/main/java/com/personal/uber_video/
 - JWT token generation (HS384 algorithm)
 - PostgreSQL database integration
 - Input validation with custom error messages
+- Global exception handling
 - RESTful API design
 - Automatic timestamp management
 - CSRF protection disabled for public endpoints
@@ -192,6 +199,8 @@ Run tests:
 ```
 
 Test coverage includes:
-- Successful user registration
-- Validation error handling
+- Successful user registration (with and without lastName)
+- First name validation (required, min 3 characters)
+- Email validation (required, valid format)
+- Password validation (required, min 6 characters)
 - Duplicate user detection
