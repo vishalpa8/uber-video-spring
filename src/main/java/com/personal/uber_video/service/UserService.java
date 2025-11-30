@@ -16,4 +16,6 @@ public interface UserService {
     void deleteUser(Long id);
 
     Map<String, Object> loginUser(LoginDto loginDto);
+
+    Map<String, Object> logoutUser();
 }

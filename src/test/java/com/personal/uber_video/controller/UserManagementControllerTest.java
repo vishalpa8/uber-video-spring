@@ -10,19 +10,21 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseCookie;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -42,9 +44,14 @@ class UserManagementControllerTest {
         dto.setEmail("john@example.com");
         dto.setPassword("password123");
 
+        ResponseCookie cookie = ResponseCookie.from("token", "jwt_token")
+                .httpOnly(true)
+                .path("/")
+                .build();
+
         Map<String, Object> response = new HashMap<>();
         response.put("user", Map.of("id", 1, "email", "john@example.com"));
-        response.put("token", "jwt_token");
+        response.put("token", cookie);
 
         when(userService.loginUser(any())).thenReturn(response);
 
@@ -52,8 +59,7 @@ class UserManagementControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.user.id").value(1))
-                .andExpect(jsonPath("$.token").value("jwt_token"));
+                .andExpect(jsonPath("$.user.id").value(1));
     }
 
     @Test
@@ -96,6 +102,32 @@ class UserManagementControllerTest {
         doThrow(new ApiException("User not found with id: 999", HttpStatus.BAD_REQUEST)).when(userService).deleteUser(anyLong());
 
         mockMvc.perform(delete("/api/auth/user/delete/999"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser
+    void logoutUser_Success() throws Exception {
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Logged out successfully");
+        response.put("token", ResponseCookie.from("token", "")
+                .httpOnly(true)
+                .path("/")
+                .maxAge(0)
+                .build());
+
+        when(userService.logoutUser()).thenReturn(response);
+
+        mockMvc.perform(post("/api/auth/user/logout"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Logged out successfully"));
+    }
+
+    @Test
+    void logoutUser_NotLoggedIn() throws Exception {
+        when(userService.logoutUser()).thenThrow(new ApiException("User is not logged in", HttpStatus.UNAUTHORIZED));
+
+        mockMvc.perform(post("/api/auth/user/logout"))
                 .andExpect(status().isForbidden());
     }
 }

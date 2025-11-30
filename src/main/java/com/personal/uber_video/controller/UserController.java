@@ -2,9 +2,13 @@ package com.personal.uber_video.controller;
 
 import com.personal.uber_video.dto.LoginDto;
 import com.personal.uber_video.dto.UserRegistrationDto;
+import com.personal.uber_video.entity.User;
+import com.personal.uber_video.response.UserResponseDto;
 import com.personal.uber_video.service.UserServiceImpl;
+import com.personal.uber_video.util.AuthUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,7 +23,8 @@ import java.util.Map;
 public class UserController {
     
     private final UserServiceImpl userServiceImpl;
-    
+    private final AuthUtil authUtil;
+
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@Valid @RequestBody UserRegistrationDto registrationDto) {
         var response = userServiceImpl.registerUser(registrationDto);
@@ -45,6 +50,27 @@ public class UserController {
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@Valid @RequestBody LoginDto loginDto){
         var response = userServiceImpl.loginUser(loginDto);
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        String token = response.get("token").toString();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, token)
+                .body(response);
+    }
+
+    @GetMapping("/profile")
+    public ResponseEntity<?> getProfile(){
+        User currentUser = authUtil.loggedInUser();
+        UserResponseDto userResponseDto = userServiceImpl.getUserResponseDto(currentUser);
+        return ResponseEntity.ok(userResponseDto);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logoutUser(){
+        var response = userServiceImpl.logoutUser();
+        String token = response.get("token").toString();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, token)
+                .body(response.get("message"));
     }
 }

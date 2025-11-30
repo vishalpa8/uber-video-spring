@@ -9,6 +9,7 @@ import com.personal.uber_video.response.UserResponseDto;
 import com.personal.uber_video.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -85,19 +86,35 @@ public class UserServiceImpl implements UserService{
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
             User user = userRepository.getUserByEmail(loginDto.getEmail());
-            String token = jwtUtil.generateToken(user.getEmail());
+            ResponseCookie cookie = jwtUtil.generateJwtCookie(user.getEmail());
             UserResponseDto userResponse = getUserResponseDto(user);
 
             Map<String, Object> response = new HashMap<>();
             response.put("user", userResponse);
-            response.put("token", token);
+            response.put("token", cookie);
             return response;
         } catch (AuthenticationException e) {
             throw new ApiException("Invalid email or password", HttpStatus.UNAUTHORIZED);
         }
     }
 
-    private UserResponseDto getUserResponseDto(User savedUser) {
+    @Override
+    public Map<String, Object> logoutUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
+            throw new ApiException("User is not logged in", HttpStatus.UNAUTHORIZED);
+        }
+
+        SecurityContextHolder.clearContext();
+        ResponseCookie cookie = jwtUtil.getCleanJwtCookie();
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Logged out successfully");
+        response.put("token", cookie);
+        return response;
+    }
+
+    public UserResponseDto getUserResponseDto(User savedUser) {
         UserResponseDto userResponse = new UserResponseDto();
         userResponse.setId(savedUser.getId());
         userResponse.setFirst_name(savedUser.getFirstName());

@@ -45,8 +45,9 @@ spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
 
 # JWT Configuration
-jwt.secret=your_jwt_secret_key_here_make_it_long_and_secure
-jwt.expiration=86400000
+spring.jwtSecret=your_jwt_secret_key_here_make_it_long_and_secure
+spring.jwtExpiration=86400000
+spring.jwtCookieName=token
 ```
 
 ### 3. Run Application
@@ -178,8 +179,13 @@ Content-Type: application/json
     "created_at": "2025-01-23T14:24:05.652",
     "updated_at": "2025-01-23T14:24:05.652"
   },
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  "token": "ResponseCookie object"
 }
+```
+
+**Set-Cookie Header:**
+```
+token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...; Path=/; Max-Age=86400000; HttpOnly; SameSite=Lax
 ```
 
 **Error (401) - Invalid Credentials:**
@@ -234,6 +240,46 @@ Authorization: Bearer <jwt_token>
 }
 ```
 
+### POST /api/auth/user/logout
+
+Logout the current user and clear authentication cookie.
+
+#### Request
+
+**URL:** `http://localhost:4000/api/auth/user/logout`
+
+**Method:** `POST`
+
+**Headers:**
+```
+Authorization: Bearer <jwt_token>
+```
+
+#### Response
+
+**Success (200):**
+```
+Logged out successfully
+```
+
+**Set-Cookie Header:**
+```
+token=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax
+```
+
+**Error (401) - Not Logged In:**
+```json
+{
+  "message": "User is not logged in"
+}
+```
+
+#### cURL Example
+
+```bash
+curl -X POST http://localhost:4000/api/auth/user/logout -H "Authorization: Bearer <jwt_token>"
+```
+
 ### DELETE /api/auth/user/delete/{id}
 
 Delete a user by ID (ADMIN only).
@@ -281,6 +327,7 @@ src/main/java/com/personal/uber_video/
 │   └── UserController.java
 ├── dto/
 │   ├── FullNameDto.java
+│   ├── LoginDto.java
 │   └── UserRegistrationDto.java
 ├── entity/
 │   └── User.java
@@ -293,11 +340,14 @@ src/main/java/com/personal/uber_video/
 │   ├── ApiResponse.java
 │   └── UserResponseDto.java
 ├── security/
-│   └── SecurityConfig.java
+│   ├── JwtAuthenticationFilter.java
+│   ├── SecurityConfig.java
+│   └── UserDetailsServiceImpl.java
 ├── service/
 │   ├── UserService.java
 │   └── UserServiceImpl.java
 └── util/
+    ├── AuthUtil.java
     └── JwtUtil.java
 ```
 
@@ -326,6 +376,8 @@ src/main/java/com/personal/uber_video/
 - Automatic timestamp management
 - Spring Security integration with AuthenticationManager
 - CSRF protection disabled for stateless API
+- Cookie-based authentication with HTTP-only cookies
+- Secure logout with cookie expiration
 
 ## Testing
 
@@ -337,6 +389,7 @@ Run tests:
 Test coverage includes:
 - Successful user registration (with and without lastName, with roles)
 - User login (success and invalid credentials)
+- User logout (clears cookie and security context)
 - First name validation (required, min 3 characters)
 - Email validation (required, valid format)
 - Password validation (required, min 6 characters)
