@@ -32,19 +32,21 @@ public class UserServiceImpl implements UserService{
     private final AuthenticationManager authenticationManager;
     
     public Map<String, Object> registerUser(UserRegistrationDto registrationDto) {
-        if (userRepository.existsByEmail(registrationDto.getEmail())) {
+        String normalizedEmail = normalizeEmail(registrationDto.getEmail());
+        
+        if (userRepository.existsByEmail(normalizedEmail)) {
             throw new ApiException("User already exists", HttpStatus.BAD_REQUEST);
         }
         
         User user = new User();
         user.setFirstName(registrationDto.getFullName().getFirstName());
         user.setLastName(registrationDto.getFullName().getLastName());
-        user.setEmail(registrationDto.getEmail());
+        user.setEmail(normalizedEmail);
         user.setPassword(passwordEncoder.encode(registrationDto.getPassword()));
         
         // Set role based on input or default
         String requestedRole = registrationDto.getRole();
-        if (requestedRole != null && !requestedRole.isBlank() && requestedRole.toLowerCase().contains("admin")) {
+        if (requestedRole != null && !requestedRole.isBlank() && requestedRole.equalsIgnoreCase("admin")) {
             user.setRole("ROLE_ADMIN");
         } else {
             user.setRole("ROLE_USER");
@@ -62,31 +64,40 @@ public class UserServiceImpl implements UserService{
 
     @Override
     public List<UserResponseDto> getRegisteredUsers() {
-        if(userRepository.count() == 0){
-            throw new ApiException("Currently there is not register user", HttpStatus.OK);
+        List<User> users = userRepository.findAll();
+        if(users.isEmpty()){
+            throw new ApiException("Currently there is no registered user", HttpStatus.NOT_FOUND);
         }
-        return userRepository.findAll().stream()
+        return users.stream()
                 .map(this::getUserResponseDto)
                 .toList();
     }
 
     @Override
-    public UserResponseDto deleteUser(Long id) {
-        User user = userRepository.findById(id).
-                orElseThrow(() -> new ApiException("User not found with id: " + id, HttpStatus.BAD_REQUEST));
+    public Map<String, Object> deleteUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ApiException("User not found with id: " + id, HttpStatus.NOT_FOUND));
         userRepository.deleteById(id);
-        return getUserResponseDto(user);
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "User deleted successfully");
+        response.put("user", getUserResponseDto(user));
+        return response;
     }
 
     @Override
     public Map<String, Object> loginUser(LoginDto loginDto) {
+        String normalizedEmail = normalizeEmail(loginDto.getEmail());
+        
         try {
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(loginDto.getEmail(), loginDto.getPassword())
+                    new UsernamePasswordAuthenticationToken(normalizedEmail, loginDto.getPassword())
             );
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            User user = userRepository.getUserByEmail(loginDto.getEmail());
+            User user = userRepository.findByEmail(normalizedEmail)
+                    .orElseThrow(() -> new ApiException("User not found", HttpStatus.NOT_FOUND));
+            
             ResponseCookie cookie = jwtUtil.generateJwtCookie(user.getEmail());
             UserResponseDto userResponse = getUserResponseDto(user);
 
@@ -101,11 +112,6 @@ public class UserServiceImpl implements UserService{
 
     @Override
     public Map<String, Object> logoutUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
-            throw new ApiException("User is not logged in", HttpStatus.BAD_REQUEST);
-        }
-
         SecurityContextHolder.clearContext();
         ResponseCookie cookie = jwtUtil.getCleanJwtCookie();
 
@@ -130,5 +136,9 @@ public class UserServiceImpl implements UserService{
             userResponse.setRole("User");
         }
         return userResponse;
+    }
+
+    private String normalizeEmail(String email) {
+        return email.toLowerCase().strip();
     }
 }

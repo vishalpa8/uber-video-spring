@@ -12,7 +12,7 @@ public interface UserService {
 
     List<UserResponseDto> getRegisteredUsers();
 
-    UserResponseDto deleteUser(Long id);
+    Map<String, Object> deleteUser(Long id);
 
     Map<String, Object> loginUser(LoginDto loginDto);
 

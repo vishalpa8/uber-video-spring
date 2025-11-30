@@ -17,9 +17,10 @@ public class AuthUtil {
 
     public User loggedInUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication == null) {
-            throw new ApiException("No user is logged in", HttpStatus.BAD_REQUEST);
+        if(authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
+            throw new ApiException("No user is logged in", HttpStatus.UNAUTHORIZED);
         }
-        return userRepository.getUserByEmail(authentication.getName());
+        return userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new ApiException("User not found", HttpStatus.NOT_FOUND));
     }
 }

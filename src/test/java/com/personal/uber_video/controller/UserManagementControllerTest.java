@@ -80,7 +80,7 @@ class UserManagementControllerTest {
     @Test
     void getAllUsers_WithoutToken_Forbidden() throws Exception {
         mockMvc.perform(get("/api/auth/user"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -88,13 +88,13 @@ class UserManagementControllerTest {
         when(userService.getRegisteredUsers()).thenThrow(new ApiException("Currently there is no registered user", HttpStatus.OK));
 
         mockMvc.perform(get("/api/auth/user"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
     void deleteUser_WithoutToken_Forbidden() throws Exception {
         mockMvc.perform(delete("/api/auth/user/delete/1"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -102,7 +102,7 @@ class UserManagementControllerTest {
         doThrow(new ApiException("User not found with id: 999", HttpStatus.BAD_REQUEST)).when(userService).deleteUser(anyLong());
 
         mockMvc.perform(delete("/api/auth/user/delete/999"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -128,6 +128,6 @@ class UserManagementControllerTest {
         when(userService.logoutUser()).thenThrow(new ApiException("User is not logged in", HttpStatus.UNAUTHORIZED));
 
         mockMvc.perform(post("/api/auth/user/logout"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 }

@@ -41,21 +41,18 @@ public class UserController {
     @DeleteMapping("/delete/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
-        var userDetail = userServiceImpl.deleteUser(id);
-        Map<String, Object> response = new HashMap<>();
-        response.put("message", "User deleted successfully");
-        response.put("user", userDetail);
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return ResponseEntity.ok(userServiceImpl.deleteUser(id));
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@Valid @RequestBody LoginDto loginDto){
         var response = userServiceImpl.loginUser(loginDto);
-        String token = response.get("token").toString();
-        response.put("token", token);
+        Object tokenObj = response.get("token");
+        String cookieHeader = tokenObj.toString();
+        response.remove("token");
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, token)
+                .header(HttpHeaders.SET_COOKIE, cookieHeader)
                 .body(response);
     }
 
