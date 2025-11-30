@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 public class AuthUtil {
 
     private final UserRepository userRepository;
+    private final JwtUtil jwtUtil;
 
     public User loggedInUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -22,5 +23,13 @@ public class AuthUtil {
         }
         return userRepository.findByEmail(authentication.getName())
                 .orElseThrow(() -> new ApiException("User not found", HttpStatus.NOT_FOUND));
+    }
+
+    public String extractToken(jakarta.servlet.http.HttpServletRequest request) {
+        String token = jwtUtil.getJwtFromCookie(request);
+        if (token == null) {
+            token = jwtUtil.getJwtFromHeader(request);
+        }
+        return token;
     }
 }

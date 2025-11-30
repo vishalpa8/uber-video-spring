@@ -16,5 +16,5 @@ public interface UserService {
 
     Map<String, Object> loginUser(LoginDto loginDto);
 
-    Map<String, Object> logoutUser();
+    Map<String, Object> logoutUser(String token);
 }

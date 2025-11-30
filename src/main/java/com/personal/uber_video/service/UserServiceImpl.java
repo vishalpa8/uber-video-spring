@@ -6,7 +6,9 @@ import com.personal.uber_video.entity.User;
 import com.personal.uber_video.exception.ApiException;
 import com.personal.uber_video.repository.UserRepository;
 import com.personal.uber_video.response.UserResponseDto;
+import com.personal.uber_video.security.TokenBlacklistService;
 import com.personal.uber_video.util.JwtUtil;
+import com.personal.uber_video.util.SecurityValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -30,8 +32,13 @@ public class UserServiceImpl implements UserService{
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
+    private final TokenBlacklistService tokenBlacklistService;
     
     public Map<String, Object> registerUser(UserRegistrationDto registrationDto) {
+        SecurityValidator.validate(registrationDto.getFullName().getFirstName());
+        SecurityValidator.validate(registrationDto.getFullName().getLastName());
+        SecurityValidator.validate(registrationDto.getEmail());
+        
         String normalizedEmail = normalizeEmail(registrationDto.getEmail());
         
         if (userRepository.existsByEmail(normalizedEmail)) {
@@ -111,7 +118,11 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
-    public Map<String, Object> logoutUser() {
+    public Map<String, Object> logoutUser(String token) {
+        if (token != null && !token.isEmpty()) {
+            tokenBlacklistService.blacklistToken(token);
+        }
+        
         SecurityContextHolder.clearContext();
         ResponseCookie cookie = jwtUtil.getCleanJwtCookie();
 

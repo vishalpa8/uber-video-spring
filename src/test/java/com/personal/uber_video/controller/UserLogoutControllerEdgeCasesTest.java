@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -49,7 +50,7 @@ class UserLogoutControllerEdgeCasesTest {
         response.put("message", "Logged out successfully");
         response.put("token", cookie);
 
-        when(userService.logoutUser()).thenReturn(response);
+        when(userService.logoutUser(any())).thenReturn(response);
 
         mockMvc.perform(post("/api/auth/user/logout"))
                 .andExpect(status().isOk())
@@ -70,7 +71,7 @@ class UserLogoutControllerEdgeCasesTest {
         response.put("message", "Logged out successfully");
         response.put("token", cookie);
 
-        when(userService.logoutUser()).thenReturn(response);
+        when(userService.logoutUser(any())).thenReturn(response);
 
         mockMvc.perform(post("/api/auth/user/logout"))
                 .andExpect(status().isOk())
@@ -90,7 +91,7 @@ class UserLogoutControllerEdgeCasesTest {
         response.put("message", "Logged out successfully");
         response.put("token", cookie);
 
-        when(userService.logoutUser()).thenReturn(response);
+        when(userService.logoutUser(any())).thenReturn(response);
 
         mockMvc.perform(post("/api/auth/user/logout"))
                 .andExpect(status().isOk())
@@ -111,7 +112,7 @@ class UserLogoutControllerEdgeCasesTest {
         response.put("message", "Logged out successfully");
         response.put("token", cookie);
 
-        when(userService.logoutUser()).thenReturn(response);
+        when(userService.logoutUser(any())).thenReturn(response);
 
         mockMvc.perform(post("/api/auth/user/logout"))
                 .andExpect(status().isOk())
@@ -120,7 +121,7 @@ class UserLogoutControllerEdgeCasesTest {
 
     @Test
     void logoutUser_AlreadyLoggedOut() throws Exception {
-        when(userService.logoutUser()).thenThrow(new ApiException("User is not logged in", HttpStatus.UNAUTHORIZED));
+        when(userService.logoutUser(any())).thenThrow(new ApiException("User is not logged in", HttpStatus.UNAUTHORIZED));
 
         mockMvc.perform(post("/api/auth/user/logout"))
                 .andExpect(status().isUnauthorized());
@@ -139,7 +140,7 @@ class UserLogoutControllerEdgeCasesTest {
         response.put("message", "Logged out successfully");
         response.put("token", cookie);
 
-        when(userService.logoutUser()).thenReturn(response);
+        when(userService.logoutUser(any())).thenReturn(response);
 
         mockMvc.perform(post("/api/auth/user/logout"))
                 .andExpect(status().isOk())
@@ -160,7 +161,7 @@ class UserLogoutControllerEdgeCasesTest {
         response.put("message", "Logged out successfully");
         response.put("token", cookie);
 
-        when(userService.logoutUser()).thenReturn(response);
+        when(userService.logoutUser(any())).thenReturn(response);
 
         mockMvc.perform(post("/api/auth/user/logout"))
                 .andExpect(status().isOk())
@@ -180,7 +181,7 @@ class UserLogoutControllerEdgeCasesTest {
         response.put("message", "Logged out successfully");
         response.put("token", cookie);
 
-        when(userService.logoutUser()).thenReturn(response);
+        when(userService.logoutUser(any())).thenReturn(response);
 
         mockMvc.perform(post("/api/auth/user/logout"))
                 .andExpect(status().isOk())

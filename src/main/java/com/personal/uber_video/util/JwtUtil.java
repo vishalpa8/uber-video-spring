@@ -127,6 +127,10 @@ public class JwtUtil {
         return extractUsername(token);
     }
 
+    public long getExpirationTime(String token) {
+        return extractAllClaims(token).getExpiration().getTime();
+    }
+
     private SecretKey key() {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes());
     }

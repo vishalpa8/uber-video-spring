@@ -116,7 +116,7 @@ class UserManagementControllerTest {
                 .maxAge(0)
                 .build());
 
-        when(userService.logoutUser()).thenReturn(response);
+        when(userService.logoutUser(any())).thenReturn(response);
 
         mockMvc.perform(post("/api/auth/user/logout"))
                 .andExpect(status().isOk())
@@ -125,7 +125,7 @@ class UserManagementControllerTest {
 
     @Test
     void logoutUser_NotLoggedIn() throws Exception {
-        when(userService.logoutUser()).thenThrow(new ApiException("User is not logged in", HttpStatus.UNAUTHORIZED));
+        when(userService.logoutUser(any())).thenThrow(new ApiException("User is not logged in", HttpStatus.UNAUTHORIZED));
 
         mockMvc.perform(post("/api/auth/user/logout"))
                 .andExpect(status().isUnauthorized());

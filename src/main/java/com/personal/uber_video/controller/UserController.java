@@ -6,6 +6,7 @@ import com.personal.uber_video.entity.User;
 import com.personal.uber_video.response.UserResponseDto;
 import com.personal.uber_video.service.UserServiceImpl;
 import com.personal.uber_video.util.AuthUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -64,13 +65,14 @@ public class UserController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logoutUser(){
-        var response = userServiceImpl.logoutUser();
-        String token = response.get("token").toString();
+    public ResponseEntity<?> logoutUser(HttpServletRequest request){
+        String token = authUtil.extractToken(request);
+        var response = userServiceImpl.logoutUser(token);
+        String cookie = response.get("token").toString();
         response.remove("token");
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, token)
+                .header(HttpHeaders.SET_COOKIE, cookie)
                 .body(response);
     }
 }

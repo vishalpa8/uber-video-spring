@@ -23,6 +23,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final UserDetailService userDetailsService;
+    private final TokenBlacklistService tokenBlacklistService;
 
 
 
@@ -34,7 +35,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             String jwtToken = parseJwt(request);
-            if (jwtToken != null && jwtUtil.validateJwtToken(jwtToken)){
+            if (jwtToken != null && !tokenBlacklistService.isBlacklisted(jwtToken) && jwtUtil.validateJwtToken(jwtToken)){
                 String username = jwtUtil.getUsernameFromToken(jwtToken);
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
                 UsernamePasswordAuthenticationToken authentication
