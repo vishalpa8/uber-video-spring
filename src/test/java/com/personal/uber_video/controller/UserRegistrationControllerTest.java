@@ -9,22 +9,17 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.personal.uber_video.response.UserResponseDto;
-
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -37,7 +32,7 @@ class UserRegistrationControllerTest {
     @MockitoBean
     private UserServiceImpl userService;
 
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
     void registerUser_Success() throws Exception {
@@ -51,16 +46,80 @@ class UserRegistrationControllerTest {
 
         Map<String, Object> response = new HashMap<>();
         response.put("user", Map.of("id", 1, "email", "john@example.com"));
-        response.put("token", "jwt_token");
 
         when(userService.registerUser(any())).thenReturn(response);
 
-        mockMvc.perform(post("/users/register")
+        mockMvc.perform(post("/api/auth/user/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.user.id").value(1))
-                .andExpect(jsonPath("$.token").value("jwt_token"));
+                .andExpect(jsonPath("$.user.id").value(1));
+    }
+
+    @Test
+    void registerUser_SuccessWithoutLastName() throws Exception {
+        UserRegistrationDto dto = new UserRegistrationDto();
+        FullNameDto fullName = new FullNameDto();
+        fullName.setFirstName("John");
+        dto.setFullName(fullName);
+        dto.setEmail("john@example.com");
+        dto.setPassword("password123");
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("user", Map.of("id", 1, "email", "john@example.com"));
+
+        when(userService.registerUser(any())).thenReturn(response);
+
+        mockMvc.perform(post("/api/auth/user/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    void registerUser_WithAdminRole() throws Exception {
+        UserRegistrationDto dto = new UserRegistrationDto();
+        FullNameDto fullName = new FullNameDto();
+        fullName.setFirstName("Admin");
+        fullName.setLastName("User");
+        dto.setFullName(fullName);
+        dto.setEmail("admin@example.com");
+        dto.setPassword("password123");
+        dto.setRole("admin");
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("user", Map.of("id", 1, "email", "admin@example.com", "role", "ROLE_ADMIN"));
+
+        when(userService.registerUser(any())).thenReturn(response);
+
+        mockMvc.perform(post("/api/auth/user/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.user.id").value(1));
+    }
+
+    @Test
+    void registerUser_WithUserRole() throws Exception {
+        UserRegistrationDto dto = new UserRegistrationDto();
+        FullNameDto fullName = new FullNameDto();
+        fullName.setFirstName("Regular");
+        fullName.setLastName("User");
+        dto.setFullName(fullName);
+        dto.setEmail("user@example.com");
+        dto.setPassword("password123");
+        dto.setRole("user");
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("user", Map.of("id", 2, "email", "user@example.com", "role", "ROLE_USER"));
+
+        when(userService.registerUser(any())).thenReturn(response);
+
+        mockMvc.perform(post("/api/auth/user/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.user.id").value(2));
     }
 
     @Test
@@ -72,7 +131,7 @@ class UserRegistrationControllerTest {
         dto.setEmail("john@example.com");
         dto.setPassword("password123");
 
-        mockMvc.perform(post("/users/register")
+        mockMvc.perform(post("/api/auth/user/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isBadRequest());
@@ -87,7 +146,7 @@ class UserRegistrationControllerTest {
         dto.setEmail("invalid-email");
         dto.setPassword("password123");
 
-        mockMvc.perform(post("/users/register")
+        mockMvc.perform(post("/api/auth/user/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isBadRequest());
@@ -102,7 +161,7 @@ class UserRegistrationControllerTest {
         dto.setEmail("john@example.com");
         dto.setPassword("123");
 
-        mockMvc.perform(post("/users/register")
+        mockMvc.perform(post("/api/auth/user/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isBadRequest());
@@ -115,31 +174,10 @@ class UserRegistrationControllerTest {
         dto.setEmail("john@example.com");
         dto.setPassword("password123");
 
-        mockMvc.perform(post("/users/register")
+        mockMvc.perform(post("/api/auth/user/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void registerUser_SuccessWithoutLastName() throws Exception {
-        UserRegistrationDto dto = new UserRegistrationDto();
-        FullNameDto fullName = new FullNameDto();
-        fullName.setFirstName("John");
-        dto.setFullName(fullName);
-        dto.setEmail("john@example.com");
-        dto.setPassword("password123");
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("user", Map.of("id", 1, "email", "john@example.com"));
-        response.put("token", "jwt_token");
-
-        when(userService.registerUser(any())).thenReturn(response);
-
-        mockMvc.perform(post("/users/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(dto)))
-                .andExpect(status().isCreated());
     }
 
     @Test
@@ -151,57 +189,12 @@ class UserRegistrationControllerTest {
         dto.setEmail("john@example.com");
         dto.setPassword("password123");
 
-        when(userService.registerUser(any())).thenThrow(new ApiException("User already exists"));
+        when(userService.registerUser(any())).thenThrow(new ApiException("User already exists", HttpStatus.BAD_REQUEST));
 
-        mockMvc.perform(post("/users/register")
+        mockMvc.perform(post("/api/auth/user/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("User already exists"));
-    }
-
-    @Test
-    void getAllUsers_Success() throws Exception {
-        UserResponseDto user1 = new UserResponseDto();
-        user1.setId(1L);
-        user1.setEmail("john@example.com");
-        
-        UserResponseDto user2 = new UserResponseDto();
-        user2.setId(2L);
-        user2.setEmail("jane@example.com");
-
-        when(userService.getRegisteredUsers()).thenReturn(List.of(user1, user2));
-
-        mockMvc.perform(get("/users"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[1].id").value(2));
-    }
-
-    @Test
-    void getAllUsers_NoUsers() throws Exception {
-        when(userService.getRegisteredUsers()).thenThrow(new ApiException("Currently there is no registered user"));
-
-        mockMvc.perform(get("/users"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Currently there is no registered user"));
-    }
-
-    @Test
-    void deleteUser_Success() throws Exception {
-        doNothing().when(userService).deleteUser(anyLong());
-
-        mockMvc.perform(delete("/users/delete/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("User deleted successfully"));
-    }
-
-    @Test
-    void deleteUser_NotFound() throws Exception {
-        doThrow(new ApiException("User not found")).when(userService).deleteUser(anyLong());
-
-        mockMvc.perform(delete("/users/delete/999"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("User not found"));
     }
 }

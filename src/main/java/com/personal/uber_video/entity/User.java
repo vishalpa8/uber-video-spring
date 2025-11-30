@@ -36,6 +36,9 @@ public class User {
     @Column(name = "socket_id")
     private String socketId;
     
+    @Column(nullable = false)
+    private String role = "ROLE_USER";
+    
     @CreationTimestamp
     @Column(name = "created_at")
     private LocalDateTime createdAt;

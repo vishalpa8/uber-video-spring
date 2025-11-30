@@ -1,22 +1,20 @@
 package com.personal.uber_video.controller;
 
+import com.personal.uber_video.dto.LoginDto;
 import com.personal.uber_video.dto.UserRegistrationDto;
-import com.personal.uber_video.response.UserResponseDto;
 import com.personal.uber_video.service.UserServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/api/auth/user")
 @RequiredArgsConstructor
 public class UserController {
     
@@ -29,16 +27,24 @@ public class UserController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> getAllUsers() {
         var response = userServiceImpl.getRegisteredUsers();
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @DeleteMapping("/delete/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
         userServiceImpl.deleteUser(id);
         Map<String, String> response = new HashMap<>();
         response.put("message", "User deleted successfully");
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> loginUser(@Valid @RequestBody LoginDto loginDto){
+        var response = userServiceImpl.loginUser(loginDto);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

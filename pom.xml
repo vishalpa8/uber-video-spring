@@ -11,7 +11,7 @@
     <groupId>com.personal</groupId>
     <artifactId>uber-video</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>uber-video</name>
+    <name>uber-video-spring</name>
     <description>Demo project for Spring Boot</description>
     <url/>
     <licenses>

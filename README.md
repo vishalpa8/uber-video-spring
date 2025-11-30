@@ -20,6 +20,7 @@ CREATE TABLE users (
     last_name VARCHAR(255),
     email VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
+    role VARCHAR(50) DEFAULT 'ROLE_USER',
     socket_id VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -61,13 +62,13 @@ java -jar target/uber-video-0.0.1-SNAPSHOT.jar
 
 ## API Endpoints
 
-### POST /users/register
+### POST /api/auth/user/register
 
 Register a new user in the system.
 
 #### Request
 
-**URL:** `http://localhost:4000/users/register`
+**URL:** `http://localhost:4000/api/auth/user/register`
 
 **Method:** `POST`
 
@@ -84,7 +85,8 @@ Content-Type: application/json
     "lastName": "Doe"
   },
   "email": "john@example.com",
-  "password": "password123"
+  "password": "password123",
+  "role": "user"
 }
 ```
 
@@ -94,6 +96,7 @@ Content-Type: application/json
 - `fullName.lastName`: Optional, minimum 3 characters if provided
 - `email`: Required, must be valid email format
 - `password`: Required, minimum 6 characters
+- `role`: Optional, defaults to "ROLE_USER", use "admin" for "ROLE_ADMIN"
 
 #### Response
 
@@ -108,8 +111,7 @@ Content-Type: application/json
     "socket_id": null,
     "created_at": "2025-01-23T14:24:05.652",
     "updated_at": "2025-01-23T14:24:05.652"
-  },
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
 }
 ```
 
@@ -136,7 +138,138 @@ Content-Type: application/json
 #### cURL Example
 
 ```bash
-curl -X POST http://localhost:4000/users/register -H "Content-Type: application/json" -d '{"fullName":{"firstName":"John","lastName":"Doe"},"email":"john@example.com","password":"password123"}'
+curl -X POST http://localhost:4000/api/auth/user/register -H "Content-Type: application/json" -d '{"fullName":{"firstName":"John","lastName":"Doe"},"email":"john@example.com","password":"password123"}'
+```
+
+### POST /api/auth/user/login
+
+Login with existing user credentials.
+
+#### Request
+
+**URL:** `http://localhost:4000/api/auth/user/login`
+
+**Method:** `POST`
+
+**Headers:**
+```
+Content-Type: application/json
+```
+
+**Body:**
+```json
+{
+  "email": "john@example.com",
+  "password": "password123"
+}
+```
+
+#### Response
+
+**Success (200):**
+```json
+{
+  "user": {
+    "id": 1,
+    "first_name": "John",
+    "last_name": "Doe",
+    "email": "john@example.com",
+    "socket_id": null,
+    "created_at": "2025-01-23T14:24:05.652",
+    "updated_at": "2025-01-23T14:24:05.652"
+  },
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+**Error (401) - Invalid Credentials:**
+```json
+{
+  "message": "Invalid email or password"
+}
+```
+
+#### cURL Example
+
+```bash
+curl -X POST http://localhost:4000/api/auth/user/login -H "Content-Type: application/json" -d '{"email":"john@example.com","password":"password123"}'
+```
+
+### GET /api/auth/user
+
+Get all registered users (ADMIN only).
+
+#### Request
+
+**URL:** `http://localhost:4000/api/auth/user`
+
+**Method:** `GET`
+
+**Headers:**
+```
+Authorization: Bearer <jwt_token>
+```
+
+#### Response
+
+**Success (200):**
+```json
+[
+  {
+    "id": 1,
+    "first_name": "John",
+    "last_name": "Doe",
+    "email": "john@example.com",
+    "socket_id": null,
+    "created_at": "2025-01-23T14:24:05.652",
+    "updated_at": "2025-01-23T14:24:05.652"
+  }
+]
+```
+
+**Error (403) - Forbidden:**
+```json
+{
+  "message": "Access Denied"
+}
+```
+
+### DELETE /api/auth/user/delete/{id}
+
+Delete a user by ID (ADMIN only).
+
+#### Request
+
+**URL:** `http://localhost:4000/api/auth/user/delete/1`
+
+**Method:** `DELETE`
+
+**Headers:**
+```
+Authorization: Bearer <jwt_token>
+```
+
+#### Response
+
+**Success (200):**
+```json
+{
+  "message": "User deleted successfully"
+}
+```
+
+**Error (403) - Forbidden:**
+```json
+{
+  "message": "Access Denied"
+}
+```
+
+**Error (400) - User Not Found:**
+```json
+{
+  "message": "User not found with id: 999"
+}
 ```
 
 ## Project Structure
@@ -182,14 +315,17 @@ src/main/java/com/personal/uber_video/
 ## Features
 
 - User registration with validation
+- User login with JWT authentication
 - Password encryption using BCrypt
 - JWT token generation (HS384 algorithm)
+- Role-based access control (ADMIN/USER)
 - PostgreSQL database integration
 - Input validation with custom error messages
 - Global exception handling
 - RESTful API design
 - Automatic timestamp management
-- CSRF protection disabled for public endpoints
+- Spring Security integration with AuthenticationManager
+- CSRF protection disabled for stateless API
 
 ## Testing
 
@@ -199,8 +335,11 @@ Run tests:
 ```
 
 Test coverage includes:
-- Successful user registration (with and without lastName)
+- Successful user registration (with and without lastName, with roles)
+- User login (success and invalid credentials)
 - First name validation (required, min 3 characters)
 - Email validation (required, valid format)
 - Password validation (required, min 6 characters)
 - Duplicate user detection
+- Role-based access control (ADMIN-only endpoints)
+- JWT authentication flow
