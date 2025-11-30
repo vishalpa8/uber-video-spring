@@ -41,9 +41,10 @@ public class UserController {
     @DeleteMapping("/delete/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
-        userServiceImpl.deleteUser(id);
-        Map<String, String> response = new HashMap<>();
+        var userDetail = userServiceImpl.deleteUser(id);
+        Map<String, Object> response = new HashMap<>();
         response.put("message", "User deleted successfully");
+        response.put("user", userDetail);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -51,6 +52,7 @@ public class UserController {
     public ResponseEntity<?> loginUser(@Valid @RequestBody LoginDto loginDto){
         var response = userServiceImpl.loginUser(loginDto);
         String token = response.get("token").toString();
+        response.put("token", token);
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, token)
@@ -68,9 +70,10 @@ public class UserController {
     public ResponseEntity<?> logoutUser(){
         var response = userServiceImpl.logoutUser();
         String token = response.get("token").toString();
+        response.remove("token");
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, token)
-                .body(response.get("message"));
+                .body(response);
     }
 }

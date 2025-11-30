@@ -71,10 +71,11 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
-    public void deleteUser(Long id) {
-        userRepository.findById(id).
+    public UserResponseDto deleteUser(Long id) {
+        User user = userRepository.findById(id).
                 orElseThrow(() -> new ApiException("User not found with id: " + id, HttpStatus.BAD_REQUEST));
         userRepository.deleteById(id);
+        return getUserResponseDto(user);
     }
 
     @Override
@@ -102,7 +103,7 @@ public class UserServiceImpl implements UserService{
     public Map<String, Object> logoutUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
-            throw new ApiException("User is not logged in", HttpStatus.UNAUTHORIZED);
+            throw new ApiException("User is not logged in", HttpStatus.BAD_REQUEST);
         }
 
         SecurityContextHolder.clearContext();
@@ -123,6 +124,11 @@ public class UserServiceImpl implements UserService{
         userResponse.setSocket_id(savedUser.getSocketId());
         userResponse.setCreated_at(savedUser.getCreatedAt());
         userResponse.setUpdated_at(savedUser.getUpdatedAt());
+        if (savedUser.getRole().toLowerCase().contains("admin")) {
+            userResponse.setRole("Admin");
+        } else {
+            userResponse.setRole("User");
+        }
         return userResponse;
     }
 }

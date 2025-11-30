@@ -120,7 +120,7 @@ class UserManagementControllerTest {
 
         mockMvc.perform(post("/api/auth/user/logout"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Logged out successfully"));
+                .andExpect(jsonPath("$.message").value("Logged out successfully"));
     }
 
     @Test

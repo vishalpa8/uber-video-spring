@@ -62,6 +62,10 @@ public class JwtUtil {
     }
 
     public boolean validateJwtToken(String jwtToken) {
+        if (jwtToken == null || jwtToken.isEmpty()) {
+            return false;
+        }
+        
         try {
             Jwts.parser()
                     .verifyWith(key())
