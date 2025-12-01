@@ -35,21 +35,19 @@ public class UserServiceImpl implements UserService{
     private final TokenBlacklistService tokenBlacklistService;
     
     public Map<String, Object> registerUser(UserRegistrationDto registrationDto) {
-        // Validate names for XSS/malicious content (emails need @ and . so skip validation)
         SecurityValidator.validate(registrationDto.getFullName().getFirstName());
         SecurityValidator.validate(registrationDto.getFullName().getLastName());
-        // Email validation skipped - @ and . are legitimate characters
+
+        String userEmail = normalizeEmail(registrationDto.getEmail());
         
-        String normalizedEmail = normalizeEmail(registrationDto.getEmail());
-        
-        if (userRepository.existsByEmail(normalizedEmail)) {
-            throw new ApiException("User already exists", HttpStatus.BAD_REQUEST);
+        if (userRepository.existsByEmail(userEmail)) {
+            throw new ApiException("User already exists with email: " + userEmail, HttpStatus.BAD_REQUEST);
         }
         
         User user = new User();
         user.setFirstName(registrationDto.getFullName().getFirstName());
         user.setLastName(registrationDto.getFullName().getLastName());
-        user.setEmail(normalizedEmail);
+        user.setEmail(userEmail);
         user.setPassword(passwordEncoder.encode(registrationDto.getPassword()));
         
         // Set role based on input or default
@@ -82,10 +80,10 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
-    public Map<String, Object> deleteUser(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ApiException("User not found with id: " + id, HttpStatus.NOT_FOUND));
-        userRepository.deleteById(id);
+    public Map<String, Object> deleteUser(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ApiException("User not found with id: " + email, HttpStatus.NOT_FOUND));
+        userRepository.deleteByEmail(email);
         
         Map<String, Object> response = new HashMap<>();
         response.put("message", "User deleted successfully");
@@ -132,8 +130,7 @@ public class UserServiceImpl implements UserService{
 
     public UserResponseDto getUserResponseDto(User savedUser) {
         UserResponseDto userResponse = new UserResponseDto();
-        userResponse.setFirst_name(savedUser.getFirstName());
-        userResponse.setLast_name(savedUser.getLastName());
+        userResponse.setFullName(savedUser.getFirstName() + " " + savedUser.getLastName());
         userResponse.setEmail(savedUser.getEmail());
         userResponse.setSocket_id(savedUser.getSocketId());
         userResponse.setCreated_at(savedUser.getCreatedAt());

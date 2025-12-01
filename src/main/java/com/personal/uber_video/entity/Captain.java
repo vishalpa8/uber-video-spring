@@ -43,6 +43,9 @@ public class Captain {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "socket_id")
+    private String socketId;
+
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;

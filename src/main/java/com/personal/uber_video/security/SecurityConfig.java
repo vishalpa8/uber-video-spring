@@ -8,6 +8,7 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -37,6 +38,18 @@ public class SecurityConfig {
 
 
     @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return (web) -> web.ignoring()
+                .requestMatchers("/")
+                .requestMatchers("/swagger-ui/**")
+                .requestMatchers("/swagger-ui.html")
+                .requestMatchers("/v3/api-docs/**")
+                .requestMatchers("/api-docs/**")
+                .requestMatchers("/swagger-resources/**")
+                .requestMatchers("/webjars/**");
+    }
+
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(authEntryPointJwt))
@@ -45,11 +58,11 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests((auth) ->
                         auth.requestMatchers("/api/auth/user/register").permitAll()
+                                .requestMatchers("/api/auth/captain/register").permitAll()
                                 .requestMatchers("/api/auth/user/login").permitAll()
+                                .requestMatchers("/api/auth/captain/login").permitAll()
                                 .requestMatchers("/api/auth/user/logout").authenticated()
-                                .requestMatchers("/v3/api-docs/**").permitAll()
                                 .requestMatchers("/h2-console/**").permitAll()
-                                .requestMatchers("/swagger-ui/**").permitAll()
                                 .anyRequest().authenticated())
 
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

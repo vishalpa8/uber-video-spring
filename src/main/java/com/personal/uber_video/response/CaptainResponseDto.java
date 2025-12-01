@@ -10,13 +10,18 @@ import java.time.LocalDateTime;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserResponseDto {
+public class CaptainResponseDto {
     private String fullName;
     private String email;
     @JsonIgnore
     private String password;
-    private String socket_id;
-    private LocalDateTime created_at;
-    private LocalDateTime updated_at;
+    private String socketId;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     private String Role;
+    private String status;
+    private String vehicleType;
+    private String vehicleColor;
+    private String vehicleNumber;
+    private int vehicleCapacity;
 }

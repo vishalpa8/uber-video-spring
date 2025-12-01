@@ -18,13 +18,13 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -99,9 +99,9 @@ class UserManagementControllerTest {
 
     @Test
     void deleteUser_NotFound() throws Exception {
-        doThrow(new ApiException("User not found with id: 999", HttpStatus.BAD_REQUEST)).when(userService).deleteUser(anyLong());
+        doThrow(new ApiException("User not found with email: diaofeia", HttpStatus.BAD_REQUEST)).when(userService).deleteUser(anyString());
 
-        mockMvc.perform(delete("/api/auth/user/delete/999"))
+        mockMvc.perform(delete("/api/auth/user/delete/diaofeia"))
                 .andExpect(status().isUnauthorized());
     }
 

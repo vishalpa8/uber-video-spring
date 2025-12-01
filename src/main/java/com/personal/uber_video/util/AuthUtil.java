@@ -3,6 +3,7 @@ package com.personal.uber_video.util;
 import com.personal.uber_video.entity.User;
 import com.personal.uber_video.exception.ApiException;
 import com.personal.uber_video.repository.UserRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -25,7 +26,7 @@ public class AuthUtil {
                 .orElseThrow(() -> new ApiException("User not found", HttpStatus.NOT_FOUND));
     }
 
-    public String extractToken(jakarta.servlet.http.HttpServletRequest request) {
+    public String extractToken(HttpServletRequest request) {
         String token = jwtUtil.getJwtFromCookie(request);
         if (token == null) {
             token = jwtUtil.getJwtFromHeader(request);
