@@ -17,17 +17,22 @@ public class TokenBlacklistService {
     private final JwtUtil jwtUtil;
 
     public void blacklistToken(String token) {
+        if (token == null || token.isEmpty()) {
+            log.warn("Attempted to blacklist null or empty token");
+            return;
+        }
+        
         try {
             long expirationTime = jwtUtil.getExpirationTime(token);
             blacklistedTokens.put(token, expirationTime);
-            log.info("Token blacklisted until: {}", expirationTime);
+            log.info("Total blacklisted tokens: {}", blacklistedTokens.size());
         } catch (Exception e) {
             log.error("Failed to blacklist token: {}", e.getMessage());
         }
     }
 
     public boolean isBlacklisted(String token) {
-        if (token == null) {
+        if (token == null || token.isEmpty()) {
             return false;
         }
         
@@ -37,6 +42,7 @@ public class TokenBlacklistService {
             return false;
         }
         
+        // Auto-cleanup expired token
         if (expirationTime < System.currentTimeMillis()) {
             blacklistedTokens.remove(token);
             log.debug("Removed expired token from blacklist");

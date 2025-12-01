@@ -35,9 +35,10 @@ public class UserServiceImpl implements UserService{
     private final TokenBlacklistService tokenBlacklistService;
     
     public Map<String, Object> registerUser(UserRegistrationDto registrationDto) {
+        // Validate names for XSS/malicious content (emails need @ and . so skip validation)
         SecurityValidator.validate(registrationDto.getFullName().getFirstName());
         SecurityValidator.validate(registrationDto.getFullName().getLastName());
-        SecurityValidator.validate(registrationDto.getEmail());
+        // Email validation skipped - @ and . are legitimate characters
         
         String normalizedEmail = normalizeEmail(registrationDto.getEmail());
         
@@ -119,22 +120,18 @@ public class UserServiceImpl implements UserService{
 
     @Override
     public Map<String, Object> logoutUser(String token) {
-        if (token != null && !token.isEmpty()) {
-            tokenBlacklistService.blacklistToken(token);
-        }
-        
+        tokenBlacklistService.blacklistToken(token);
         SecurityContextHolder.clearContext();
         ResponseCookie cookie = jwtUtil.getCleanJwtCookie();
 
         Map<String, Object> response = new HashMap<>();
-        response.put("message", "Logged out successfully");
+        response.put("message", "Logged out successfully!");
         response.put("token", cookie);
         return response;
     }
 
     public UserResponseDto getUserResponseDto(User savedUser) {
         UserResponseDto userResponse = new UserResponseDto();
-        userResponse.setId(savedUser.getId());
         userResponse.setFirst_name(savedUser.getFirstName());
         userResponse.setLast_name(savedUser.getLastName());
         userResponse.setEmail(savedUser.getEmail());

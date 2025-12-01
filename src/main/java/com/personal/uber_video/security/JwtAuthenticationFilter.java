@@ -33,9 +33,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         log.debug("AuthTokenFilter called for URI: {}", request.getRequestURI());
 
+        String jwtToken = parseJwt(request);
+
         try {
-            String jwtToken = parseJwt(request);
-            if (jwtToken != null && !tokenBlacklistService.isBlacklisted(jwtToken) && jwtUtil.validateJwtToken(jwtToken)){
+            // Check if token is blacklisted
+            if(tokenBlacklistService.isBlacklisted(jwtToken)) {
+                log.warn("Blacklisted token detected for URI: {}", request.getRequestURI());
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"message\":\"Invalid Token!. Please login again.\"}");
+                return;
+            }
+
+            // Validate and set authentication
+            if (jwtToken != null && !jwtToken.isBlank() && jwtUtil.validateJwtToken(jwtToken)){
                 String username = jwtUtil.getUsernameFromToken(jwtToken);
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
                 UsernamePasswordAuthenticationToken authentication

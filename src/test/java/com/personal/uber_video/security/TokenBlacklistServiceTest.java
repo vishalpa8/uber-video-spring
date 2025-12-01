@@ -106,8 +106,7 @@ class TokenBlacklistServiceTest {
 
     @Test
     void blacklistToken_NullToken() {
-        when(jwtUtil.getExpirationTime(null)).thenThrow(new IllegalArgumentException("Token cannot be null"));
-
+        // No mock setup needed - method should handle null internally
         tokenBlacklistService.blacklistToken(null);
 
         assertFalse(tokenBlacklistService.isBlacklisted(null));
