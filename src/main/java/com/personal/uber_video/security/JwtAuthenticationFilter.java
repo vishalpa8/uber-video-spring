@@ -30,9 +30,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     // Public endpoints that should skip JWT authentication
     private static final List<String> PUBLIC_ENDPOINTS = Arrays.asList(
             "/api/auth/user/register",
-            "/api/auth/captain/register",
+            "/api/auth/captains/register",
             "/api/auth/user/login",
-            "/api/auth/captain/login",
+            "/api/auth/captains/login",
             "/h2-console"
     );
 

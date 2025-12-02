@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/auth/captain")
+@RequestMapping("/api/auth/captains")
 @Tag(name = "Captain Management", description = "APIs for captain (driver) registration, authentication, and management")
 public class CaptainController {
 

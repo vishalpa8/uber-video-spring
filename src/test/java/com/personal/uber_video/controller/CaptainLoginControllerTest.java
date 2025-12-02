@@ -68,7 +68,7 @@ class CaptainLoginControllerTest {
 
         when(captainService.loginCaptain(any())).thenReturn(response);
 
-        mockMvc.perform(post("/api/auth/captain/login")
+        mockMvc.perform(post("/api/auth/captains/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isOk())
@@ -83,14 +83,14 @@ class CaptainLoginControllerTest {
 
     @Test
     void loginCaptain_NullRequestBody() throws Exception {
-        mockMvc.perform(post("/api/auth/captain/login")
+        mockMvc.perform(post("/api/auth/captains/login")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
     void loginCaptain_EmptyRequestBody() throws Exception {
-        mockMvc.perform(post("/api/auth/captain/login")
+        mockMvc.perform(post("/api/auth/captains/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}"))
                 .andExpect(status().isBadRequest());
@@ -98,7 +98,7 @@ class CaptainLoginControllerTest {
 
     @Test
     void loginCaptain_MalformedJson() throws Exception {
-        mockMvc.perform(post("/api/auth/captain/login")
+        mockMvc.perform(post("/api/auth/captains/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{invalid json"))
                 .andExpect(status().isBadRequest());
@@ -109,7 +109,7 @@ class CaptainLoginControllerTest {
         LoginDto dto = new LoginDto();
         dto.setPassword("password123");
 
-        mockMvc.perform(post("/api/auth/captain/login")
+        mockMvc.perform(post("/api/auth/captains/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isBadRequest());
@@ -121,7 +121,7 @@ class CaptainLoginControllerTest {
         dto.setEmail("");
         dto.setPassword("password123");
 
-        mockMvc.perform(post("/api/auth/captain/login")
+        mockMvc.perform(post("/api/auth/captains/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isBadRequest());
@@ -132,7 +132,7 @@ class CaptainLoginControllerTest {
         LoginDto dto = new LoginDto();
         dto.setEmail("captain@example.com");
 
-        mockMvc.perform(post("/api/auth/captain/login")
+        mockMvc.perform(post("/api/auth/captains/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isBadRequest());
@@ -144,7 +144,7 @@ class CaptainLoginControllerTest {
         dto.setEmail("captain@example.com");
         dto.setPassword("");
 
-        mockMvc.perform(post("/api/auth/captain/login")
+        mockMvc.perform(post("/api/auth/captains/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isBadRequest());
@@ -156,7 +156,7 @@ class CaptainLoginControllerTest {
         dto.setEmail("invalid-email");
         dto.setPassword("password123");
 
-        mockMvc.perform(post("/api/auth/captain/login")
+        mockMvc.perform(post("/api/auth/captains/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isBadRequest());
@@ -168,7 +168,7 @@ class CaptainLoginControllerTest {
         dto.setEmail("captain@example.com");
         dto.setPassword("      ");
 
-        mockMvc.perform(post("/api/auth/captain/login")
+        mockMvc.perform(post("/api/auth/captains/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isBadRequest());
@@ -191,7 +191,7 @@ class CaptainLoginControllerTest {
 
         when(captainService.loginCaptain(any())).thenReturn(response);
 
-        mockMvc.perform(post("/api/auth/captain/login")
+        mockMvc.perform(post("/api/auth/captains/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isOk());
@@ -206,7 +206,7 @@ class CaptainLoginControllerTest {
         when(captainService.loginCaptain(any()))
                 .thenThrow(new ApiException("Invalid email or password", HttpStatus.UNAUTHORIZED));
 
-        mockMvc.perform(post("/api/auth/captain/login")
+        mockMvc.perform(post("/api/auth/captains/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isUnauthorized())
@@ -222,7 +222,7 @@ class CaptainLoginControllerTest {
         when(captainService.loginCaptain(any()))
                 .thenThrow(new ApiException("Invalid email or password", HttpStatus.UNAUTHORIZED));
 
-        mockMvc.perform(post("/api/auth/captain/login")
+        mockMvc.perform(post("/api/auth/captains/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isUnauthorized())
@@ -246,7 +246,7 @@ class CaptainLoginControllerTest {
 
         when(captainService.loginCaptain(any())).thenReturn(response);
 
-        mockMvc.perform(post("/api/auth/captain/login")
+        mockMvc.perform(post("/api/auth/captains/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isOk())
@@ -270,7 +270,7 @@ class CaptainLoginControllerTest {
 
         when(captainService.loginCaptain(any())).thenReturn(response);
 
-        mockMvc.perform(post("/api/auth/captain/login")
+        mockMvc.perform(post("/api/auth/captains/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isOk())
@@ -305,7 +305,7 @@ class CaptainLoginControllerTest {
 
         when(captainService.loginCaptain(any())).thenReturn(response);
 
-        mockMvc.perform(post("/api/auth/captain/login")
+        mockMvc.perform(post("/api/auth/captains/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isOk())
@@ -322,7 +322,7 @@ class CaptainLoginControllerTest {
         dto.setEmail("captain@example.com' OR '1'='1");
         dto.setPassword("password");
 
-        mockMvc.perform(post("/api/auth/captain/login")
+        mockMvc.perform(post("/api/auth/captains/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isBadRequest());
@@ -334,7 +334,7 @@ class CaptainLoginControllerTest {
         dto.setEmail("  captain@example.com");
         dto.setPassword("password123");
 
-        mockMvc.perform(post("/api/auth/captain/login")
+        mockMvc.perform(post("/api/auth/captains/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isBadRequest());
@@ -346,7 +346,7 @@ class CaptainLoginControllerTest {
         dto.setEmail("captain@example.com  ");
         dto.setPassword("password123");
 
-        mockMvc.perform(post("/api/auth/captain/login")
+        mockMvc.perform(post("/api/auth/captains/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isBadRequest());
@@ -361,7 +361,7 @@ class CaptainLoginControllerTest {
         when(captainService.loginCaptain(any()))
                 .thenThrow(new ApiException("Invalid email or password", HttpStatus.UNAUTHORIZED));
 
-        mockMvc.perform(post("/api/auth/captain/login")
+        mockMvc.perform(post("/api/auth/captains/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isUnauthorized());
@@ -384,7 +384,7 @@ class CaptainLoginControllerTest {
 
         when(captainService.loginCaptain(any())).thenReturn(response);
 
-        mockMvc.perform(post("/api/auth/captain/login")
+        mockMvc.perform(post("/api/auth/captains/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isOk())

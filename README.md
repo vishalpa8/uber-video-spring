@@ -144,7 +144,7 @@ Delete user by email (ADMIN only).
 
 ### 🚗 Captain Management
 
-#### POST `/api/auth/captain/register`
+#### POST `/api/auth/captains/register`
 Register a new captain (driver) with vehicle details.
 
 **Request:**
@@ -185,16 +185,16 @@ Register a new captain (driver) with vehicle details.
 }
 ```
 
-#### GET `/api/auth/captain/profile` 🔒
+#### GET `/api/auth/captains/profile` 🔒
 Get current captain profile (requires authentication).
 
-#### POST `/api/auth/captain/logout` 🔒
+#### POST `/api/auth/captains/logout` 🔒
 Logout and invalidate JWT token.
 
 **Vehicle Types:** `Car`, `Bike`, `Auto`
 **Capacity Range:** 2-8 passengers
 
-#### POST `/api/auth/captain/login`
+#### POST `/api/auth/captains/login`
 Captain login with email and password.
 
 **Request:**
@@ -529,7 +529,7 @@ psql -U postgres -c "CREATE DATABASE uber_video;"
 
 ### Register Captain
 ```bash
-curl -X POST http://localhost:4000/api/auth/captain/register \
+curl -X POST http://localhost:4000/api/auth/captains/register \
   -H "Content-Type: application/json" \
   -d '{
     "fullName": {
@@ -586,7 +586,7 @@ curl -X POST http://localhost:4000/api/auth/user/logout \
 
 ### Login Captain
 ```bash
-curl -X POST http://localhost:4000/api/auth/captain/login \\\n+  -H \"Content-Type: application/json\" \\\n+  -d '{\"email\": \"john.kumar@example.com\", \"password\": \"password123\"}' \\\n+  -c cookies.txt
+curl -X POST http://localhost:4000/api/auth/captains/login \\\n+  -H \"Content-Type: application/json\" \\\n+  -d '{\"email\": \"john.kumar@example.com\", \"password\": \"password123\"}' \\\n+  -c cookies.txt
   -H "Content-Type: application/json" \
   -d '{
     "email": "john.kumar@example.com",
@@ -596,13 +596,13 @@ curl -X POST http://localhost:4000/api/auth/captain/login \\\n+  -H \"Content-Ty
 
 ### Get Captain Profile (Protected)
 ```bash
-curl -X GET http://localhost:4000/api/auth/captain/profile \
+curl -X GET http://localhost:4000/api/auth/captains/profile \
   -b captain-cookies.txt
 ```
 
 ### Logout Captain
 ```bash
-curl -X POST http://localhost:4000/api/auth/captain/logout \
+curl -X POST http://localhost:4000/api/auth/captains/logout \
   -b captain-cookies.txt
 ```
 
@@ -615,15 +615,15 @@ curl -X POST http://localhost:4000/api/auth/captain/logout \
 - `/swagger-ui/**` - Swagger UI
 - `/api-docs/**` - OpenAPI docs
 - `/api/auth/user/register` - User registration
-- `/api/auth/captain/register` - Captain registration
+- `/api/auth/captains/register` - Captain registration
 - `/api/auth/user/login` - User login
-- `/api/auth/captain/login` - Captain login
+- `/api/auth/captains/login` - Captain login
 
 ### Protected Endpoints (Auth Required)
 - `/api/auth/user/logout` - User logout
 - `/api/auth/user/profile` - Get profile
-- `/api/auth/captain/logout` - Captain logout
-- `/api/auth/captain/profile` - Get captain profile
+- `/api/auth/captains/logout` - Captain logout
+- `/api/auth/captains/profile` - Get captain profile
 
 ### Admin Only Endpoints
 - `/api/auth/user` - Get all users

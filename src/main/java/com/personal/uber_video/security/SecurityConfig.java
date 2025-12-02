@@ -62,11 +62,11 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests((auth) ->
                         auth.requestMatchers("/api/auth/user/register").permitAll()
-                                .requestMatchers("/api/auth/captain/register").permitAll()
+                                .requestMatchers("/api/auth/captains/register").permitAll()
                                 .requestMatchers("/api/auth/user/login").permitAll()
-                                .requestMatchers("/api/auth/captain/login").permitAll()
+                                .requestMatchers("/api/auth/captains/login").permitAll()
                                 .requestMatchers("/api/auth/user/logout").authenticated()
-                                .requestMatchers("/api/auth/captain/logout").authenticated()
+                                .requestMatchers("/api/auth/captains/logout").authenticated()
                                 .requestMatchers("/h2-console/**").permitAll()
                                 .anyRequest().authenticated())
 
