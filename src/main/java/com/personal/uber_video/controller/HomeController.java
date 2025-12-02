@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.servlet.view.RedirectView;
 
 @Controller
-@Hidden // Hide from Swagger documentation
+@Hidden
 public class HomeController {
 
     @GetMapping("/")

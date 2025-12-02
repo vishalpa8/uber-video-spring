@@ -111,7 +111,6 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleGenericException(Exception e) {
-        // Log for debugging in development
         System.err.println("Unexpected error: " + e.getClass().getName());
         e.printStackTrace();
 
@@ -120,7 +119,6 @@ public class GlobalExceptionHandler {
     }
 
     private String extractValidationMessage(String fullMessage) {
-        // Extract clean validation message from Hibernate validator message
         if (fullMessage.contains("HV")) {
             int start = fullMessage.indexOf("HV");
             int end = fullMessage.indexOf("]", start);
