@@ -25,10 +25,13 @@ public class CaptainDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         Captain captain = captainRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Captain not found: " + email));
-        return new org.springframework.security.core.userdetails.User(
+
+        return new AppPrincipal(
                 captain.getEmail(),
                 captain.getPassword(),
-                Collections.singletonList(new SimpleGrantedAuthority(captain.getRole()))
+                Collections.singletonList(new SimpleGrantedAuthority(captain.getRole())),
+                captain.getCaptainId(),
+                AppPrincipal.EntityType.CAPTAIN
         );
     }
 }

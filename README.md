@@ -9,7 +9,7 @@ Spring Boot REST API for an Uber-like ride-sharing application with JWT authenti
 - 🚗 Vehicle Management
 - 🛡️ Advanced Security (Token Blacklist, XSS Protection, Delegating UserDetailsService)
 - 📚 Interactive Swagger/OpenAPI Documentation
-- ✅ 107 Tests (100% passing)
+- ✅ 124 Tests (100% passing)
 
 ---
 
@@ -245,21 +245,58 @@ Captain login with email and password.
 - **Cookie Name:** `token`
 - **SameSite:** Lax
 
-### Delegating Authentication System
-The application uses a **DelegatingUserDetailsService** that seamlessly authenticates both Users and Captains:
+### Dual-Table Authentication System
 
-1. **AppPrincipal** - Custom UserDetails carrying entity ID and type (USER/CAPTAIN)
-2. **UserTableUserDetailsService** - Authenticates users from User table
-3. **CaptainTableUserDetailsService** - Authenticates captains from Captain table
-4. **DelegatingUserDetailsService** - Tries both services in order
+The application implements a sophisticated **delegating authentication** pattern that seamlessly handles both User and Captain authentication:
+
+#### Architecture Components
+
+```
+SecurityContext
+    ↓
+AppPrincipal (Custom UserDetails)
+    ├── Entity ID (UUID)
+    ├── Entity Type (USER/CAPTAIN)
+    └── Authorities/Roles
+    ↓
+AuthUtil (Helper)
+    ├── loggedInUser() → Fetches full User entity
+    └── loggedInCaptain() → Fetches full Captain entity
+```
+
+#### Components
+
+1. **AppPrincipal** - Custom UserDetails implementation
+   - Stores entity UUID for efficient lookup
+   - Contains entity type enum (USER or CAPTAIN)
+   - Lightweight, stored in SecurityContext
+
+2. **UserDetailService** - Loads User credentials
+   - Queries User table by email
+   - Creates AppPrincipal with USER type
+   - Uses `user.getRole()` directly from entity
+
+3. **CaptainDetailsService** - Loads Captain credentials
+   - Queries Captain table by email
+   - Creates AppPrincipal with CAPTAIN type
+   - Uses `captain.getRole()` directly from entity
+
+4. **DelegatingDetailsService** (Primary)
+   - Tries UserDetailService first
+   - Falls back to CaptainDetailsService
+   - Marked `@Primary` for Spring auto-wiring
+
+5. **AuthUtil** - Controller helper utility
+   - Retrieves AppPrincipal from SecurityContext
+   - Validates entity type (USER vs CAPTAIN)
+   - Fetches complete entity from DB by UUID
 
 **Benefits:**
-- ✅ Single login endpoint can authenticate both user types
-- ✅ Efficient UUID-based entity lookup (no email queries)
-- ✅ Type-safe access control with AppPrincipal
-- ✅ Automatic role normalization (ROLE_USER, ROLE_CAPTAIN)
-- ✅ Controller-level entity type validation
-- ✅ Preserves separation of concerns
+- ✅ Dual authentication (User & Captain) in single system
+- ✅ Fast UUID-based lookups (no repeated email queries)
+- ✅ Type-safe entity access in controllers
+- ✅ Prevents cross-access (User can't access Captain endpoints)
+- ✅ Clean separation of concerns
 
 ### Token Blacklist
 - Prevents token reuse after logout
@@ -347,11 +384,11 @@ CREATE TABLE vehicle (
 ./mvnw test -Dtest=UserLoginControllerEdgeCasesTest
 ```
 
-### Test Coverage (107 Tests)
+### Test Coverage (124 Tests)
 
 | Test Suite | Tests | Description |
 |------------|-------|-------------|
-| **CaptainRegistrationControllerTest** | 21 | Captain registration (happy path, validation, edge cases) |
+| **CaptainLoginControllerTest** | 21 | Captain login (happy path, validation, JWT) |
 | **UserRegistrationControllerTest** | 9 | User registration (success, roles, validation) |
 | **UserRegistrationControllerEdgeCasesTest** | 23 | User registration edge cases (XSS, malformed input) |
 | **UserLoginControllerEdgeCasesTest** | 21 | User login scenarios (success, failures, tokens) |
@@ -359,9 +396,13 @@ CREATE TABLE vehicle (
 | **UserManagementControllerTest** | 8 | Admin operations (get all, delete, RBAC) |
 | **TokenBlacklistServiceTest** | 9 | Token blacklist functionality |
 | **SecurityValidatorTest** | 6 | Input validation and XSS protection |
+| **AppPrincipalTest** | 3 | Custom UserDetails functionality |
+| **UserDetailServiceTest** | 5 | User authentication service |
+| **CaptainDetailsServiceTest** | 5 | Captain authentication service |
+| **DelegatingDetailsServiceTest** | 4 | Unified authentication delegation |
 | **UberVideoApplicationTests** | 1 | Spring context loading |
 
-**Total: 107 tests | 0 failures | Build time: ~5s**
+**Total: 124 tests | 0 failures | Build time: ~6s**
 
 ---
 
@@ -401,10 +442,10 @@ src/main/java/com/personal/uber_video/
 │   └── CaptainResponseDto.java         # Captain response DTO
 ├── security/
 │   ├── AppPrincipal.java               # Custom UserDetails with entity type
-│   ├── UserTableUserDetailsService.java    # User authentication
-│   ├── CaptainTableUserDetailsService.java # Captain authentication
-│   ├── DelegatingUserDetailsService.java   # Unified auth delegator
-│   ├── AuthEntryPointJwt.java              # Custom auth entry point
+│   ├── UserDetailService.java          # User authentication
+│   ├── CaptainDetailsService.java      # Captain authentication
+│   ├── DelegatingDetailsService.java   # Unified auth delegator
+│   ├── AuthEntryPointJwt.java          # Custom auth entry point
 │   ├── JwtAuthenticationFilter.java        # JWT filter
 │   ├── SecurityConfig.java                 # Security configuration
 │   ├── TokenBlacklistService.java          # Token blacklist
@@ -671,17 +712,23 @@ Centralized error handling with specific messages:
 ./mvnw test jacoco:report
 ```
 
-### Coverage Breakdown
+### Test Coverage Breakdown
 
-**Controller Tests (99 tests):**
-- Captain Registration: 21 tests
+**Controller Tests (91 tests):**
+- Captain Login: 21 tests
 - User Registration: 32 tests (9 + 23 edge cases)
 - User Login: 21 tests
 - User Logout: 9 tests
 - User Management: 8 tests
 
-**Service Tests (7 tests):**
+**Service Tests (9 tests):**
 - Token Blacklist: 9 tests
+
+**Security Tests (17 tests):**
+- AppPrincipal: 3 tests
+- UserDetailService: 5 tests
+- CaptainDetailsService: 5 tests
+- DelegatingDetailsService: 4 tests
 
 **Utility Tests (6 tests):**
 - Security Validator: 6 tests
@@ -689,7 +736,7 @@ Centralized error handling with specific messages:
 **Integration Tests (1 test):**
 - Application Context: 1 test
 
-**Total: 107 tests | 0 failures | ~5s build time**
+**Total: 124 tests | 0 failures | ~6s build time**
 
 ---
 
@@ -871,14 +918,15 @@ ENTRYPOINT ["java", "-jar", "/app.jar"]
 - ✅ Captain registration with vehicle
 - ✅ Captain login with JWT
 - ✅ Captain profile & logout endpoints
-- ✅ Unified authentication system (DelegatingUserDetailsService)
+- ✅ Dual-table authentication (AppPrincipal + DelegatingDetailsService)
 - ✅ JWT authentication with HTTP-only cookies
 - ✅ Token blacklist service
 - ✅ Role-based access control (ROLE_USER, ROLE_CAPTAIN, ROLE_ADMIN)
 - ✅ Input validation & XSS sanitization
 - ✅ Global exception handling
 - ✅ Swagger/OpenAPI documentation
-- ✅ Comprehensive test coverage (107 tests)
+- ✅ Comprehensive test coverage (124 tests)
+- ✅ Optimized authentication (UUID-based entity lookups)
 
 ### In Progress 🚧
 - [ ] Ride management (create, accept, track)
