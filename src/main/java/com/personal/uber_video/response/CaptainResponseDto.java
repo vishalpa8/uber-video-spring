@@ -1,6 +1,7 @@
 package com.personal.uber_video.response;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.personal.uber_video.dto.VehicleDto;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -20,8 +21,5 @@ public class CaptainResponseDto {
     private LocalDateTime updatedAt;
     private String Role;
     private String status;
-    private String vehicleType;
-    private String vehicleColor;
-    private String vehicleNumber;
-    private int vehicleCapacity;
+    private VehicleDto vehicle;
 }

@@ -41,7 +41,7 @@ public class UserServiceImpl implements UserService{
         String userEmail = normalizeEmail(registrationDto.getEmail());
         
         if (userRepository.existsByEmail(userEmail)) {
-            throw new ApiException("User already exists with email: " + userEmail, HttpStatus.BAD_REQUEST);
+            throw new ApiException("User already exists", HttpStatus.BAD_REQUEST);
         }
         
         User user = new User();

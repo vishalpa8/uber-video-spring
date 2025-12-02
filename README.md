@@ -7,7 +7,7 @@ Spring Boot REST API for an Uber-like ride-sharing application with JWT authenti
 - 👤 User & Captain (Driver) Management
 - 🔐 JWT Authentication with HTTP-only cookies
 - 🚗 Vehicle Management
-- 🛡️ Advanced Security (Token Blacklist, XSS Protection)
+- 🛡️ Advanced Security (Token Blacklist, XSS Protection, Delegating UserDetailsService)
 - 📚 Interactive Swagger/OpenAPI Documentation
 - ✅ 107 Tests (100% passing)
 
@@ -156,10 +156,12 @@ Register a new captain (driver) with vehicle details.
   },
   "email": "john.kumar@example.com",
   "password": "password123",
-  "vehicleType": "Bike",
-  "plate": "UP16DC6447",
-  "capacity": 2,
-  "color": "black"
+  "vehicle": {
+    "vehicleType": "Bike",
+    "plate": "UK13DA3283",
+    "capacity": 2,
+    "color": "black"
+  }
 }
 ```
 
@@ -176,22 +178,65 @@ Register a new captain (driver) with vehicle details.
     "status": "Inactive",
     "vehicleType": "BIKE",
     "vehicleColor": "black",
-    "vehicleNumber": "UP16DC6447",
+    "vehicleNumber": "UK13DA3283",
     "vehicleCapacity": 2
   },
   "message": "Captain registered successfully!"
 }
 ```
 
+#### GET `/api/auth/captain/profile` 🔒
+Get current captain profile (requires authentication).
+
+#### POST `/api/auth/captain/logout` 🔒
+Logout and invalidate JWT token.
+
 **Vehicle Types:** `Car`, `Bike`, `Auto`
 **Capacity Range:** 2-8 passengers
 
 #### POST `/api/auth/captain/login`
-Captain login endpoint (🚧 Not yet implemented - returns 501).
+Captain login with email and password.
+
+**Request:**
+```json
+{
+  "email": "john.kumar@example.com",
+  "password": "password123"
+}
+```
+
+**Response (200):**
+```json
+{
+  "user": {
+    "fullName": "John Kumar",
+    "email": "john.kumar@example.com",
+    "socketId": null,
+    "createdAt": "2025-12-01T23:00:00.000",
+    "updatedAt": "2025-12-01T23:00:00.000",
+    "role": "Captain",
+    "status": "Inactive",
+    "vehicle": {
+      "vehicleType": "BIKE",
+      "color": "black",
+      "plate": "UK13DA3283",
+      "capacity": 2
+    }
+  }
+}
+```
+**Set-Cookie:** `token=<jwt_token>; HttpOnly; SameSite=Lax; Max-Age=86400000`
+
+**Error Response (401):**
+```json
+{
+  "message": "Invalid email or password"
+}
+```
 
 ---
 
-## 🔐 Security Features
+## 🔐 Security Architecture
 
 ### JWT Authentication
 - **Algorithm:** HS384
@@ -199,6 +244,22 @@ Captain login endpoint (🚧 Not yet implemented - returns 501).
 - **Expiration:** 24 hours (86400000ms)
 - **Cookie Name:** `token`
 - **SameSite:** Lax
+
+### Delegating Authentication System
+The application uses a **DelegatingUserDetailsService** that seamlessly authenticates both Users and Captains:
+
+1. **AppPrincipal** - Custom UserDetails carrying entity ID and type (USER/CAPTAIN)
+2. **UserTableUserDetailsService** - Authenticates users from User table
+3. **CaptainTableUserDetailsService** - Authenticates captains from Captain table
+4. **DelegatingUserDetailsService** - Tries both services in order
+
+**Benefits:**
+- ✅ Single login endpoint can authenticate both user types
+- ✅ Efficient UUID-based entity lookup (no email queries)
+- ✅ Type-safe access control with AppPrincipal
+- ✅ Automatic role normalization (ROLE_USER, ROLE_CAPTAIN)
+- ✅ Controller-level entity type validation
+- ✅ Preserves separation of concerns
 
 ### Token Blacklist
 - Prevents token reuse after logout
@@ -339,11 +400,16 @@ src/main/java/com/personal/uber_video/
 │   ├── UserResponseDto.java
 │   └── CaptainResponseDto.java         # Captain response DTO
 ├── security/
-│   ├── AuthEntryPointJwt.java          # Custom auth entry point
-│   ├── JwtAuthenticationFilter.java    # JWT filter
-│   ├── SecurityConfig.java             # Security configuration
-│   ├── TokenBlacklistService.java      # Token blacklist
-│   └── UserDetailService.java          # User details loader
+│   ├── AppPrincipal.java               # Custom UserDetails with entity type
+│   ├── UserTableUserDetailsService.java    # User authentication
+│   ├── CaptainTableUserDetailsService.java # Captain authentication
+│   ├── DelegatingUserDetailsService.java   # Unified auth delegator
+│   ├── AuthEntryPointJwt.java              # Custom auth entry point
+│   ├── JwtAuthenticationFilter.java        # JWT filter
+│   ├── SecurityConfig.java                 # Security configuration
+│   ├── TokenBlacklistService.java          # Token blacklist
+│   └── UserDetailService.java (legacy)     # Original user loader
+│                                           # (kept for backward compatibility)
 ├── service/
 │   ├── UserService.java
 │   ├── UserServiceImpl.java
@@ -431,10 +497,12 @@ curl -X POST http://localhost:4000/api/auth/captain/register \
     },
     "email": "john.kumar@example.com",
     "password": "password123",
-    "vehicleType": "Bike",
-    "plate": "UP16DC6447",
-    "capacity": 2,
-    "color": "black"
+    "vehicle": {
+      "vehicleType": "Bike",
+      "plate": "UK13DA3283",
+      "capacity": 2,
+      "color": "black"
+    }
   }'
 ```
 
@@ -475,6 +543,28 @@ curl -X POST http://localhost:4000/api/auth/user/logout \
   -b cookies.txt
 ```
 
+### Login Captain
+```bash
+curl -X POST http://localhost:4000/api/auth/captain/login \\\n+  -H \"Content-Type: application/json\" \\\n+  -d '{\"email\": \"john.kumar@example.com\", \"password\": \"password123\"}' \\\n+  -c cookies.txt
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "john.kumar@example.com",
+    "password": "password123"
+  }' -c captain-cookies.txt
+```
+
+### Get Captain Profile (Protected)
+```bash
+curl -X GET http://localhost:4000/api/auth/captain/profile \
+  -b captain-cookies.txt
+```
+
+### Logout Captain
+```bash
+curl -X POST http://localhost:4000/api/auth/captain/logout \
+  -b captain-cookies.txt
+```
+
 ---
 
 ## 🛡️ Security Configuration
@@ -491,6 +581,8 @@ curl -X POST http://localhost:4000/api/auth/user/logout \
 ### Protected Endpoints (Auth Required)
 - `/api/auth/user/logout` - User logout
 - `/api/auth/user/profile` - Get profile
+- `/api/auth/captain/logout` - Captain logout
+- `/api/auth/captain/profile` - Get captain profile
 
 ### Admin Only Endpoints
 - `/api/auth/user` - Get all users
@@ -511,10 +603,11 @@ Swagger paths completely bypass the security filter chain for optimal performanc
 - **role:** Optional, defaults to "ROLE_USER" (for users) or "ROLE_CAPTAIN" (for captains)
 
 ### Captain-Specific Fields
-- **vehicleType:** Required, min 3 characters (Car, Bike, Auto)
-- **plate:** Required, min 10 characters, unique
-- **capacity:** Required, range 2-8
-- **color:** Required, min 3 characters
+- **vehicle:** Required, must be a valid nested object
+  - **vehicleType:** Required, not blank (Car, Bike, Auto)
+  - **plate:** Required, not blank, unique
+  - **capacity:** Required, range 2-8
+  - **color:** Required, not blank
 
 ---
 
@@ -624,6 +717,29 @@ junit-jupiter ....................... JUnit 5
 ```
 
 ---
+
+## 🐛 Troubleshooting
+
+### Common Validation Errors
+
+#### Error: `No validator could be found for constraint @NotBlank validating type VehicleDto`
+**Cause:** Using `@NotBlank` on a complex object instead of a String field.
+**Solution:** Use `@NotNull` and `@Valid` annotations on complex objects, `@NotBlank` only on String fields.
+
+```java
+// ❌ Wrong
+@NotBlank
+private VehicleDto vehicle;
+
+// ✅ Correct
+@NotNull(message = "Vehicle is required")
+@Valid
+private VehicleDto vehicle;
+```
+
+---
+
+## 🔧 Recent Fixes
 
 ## 🐛 Known Issues & Solutions
 
@@ -751,19 +867,20 @@ ENTRYPOINT ["java", "-jar", "/app.jar"]
 ## 📈 Roadmap
 
 ### Completed ✅
-- [x] User registration & authentication
-- [x] Captain registration with vehicle
-- [x] JWT authentication with cookies
-- [x] Token blacklist service
-- [x] Role-based access control
-- [x] Input validation & sanitization
-- [x] Global exception handling
-- [x] Swagger/OpenAPI documentation
-- [x] Comprehensive test coverage (107 tests)
+- ✅ User registration & authentication
+- ✅ Captain registration with vehicle
+- ✅ Captain login with JWT
+- ✅ Captain profile & logout endpoints
+- ✅ Unified authentication system (DelegatingUserDetailsService)
+- ✅ JWT authentication with HTTP-only cookies
+- ✅ Token blacklist service
+- ✅ Role-based access control (ROLE_USER, ROLE_CAPTAIN, ROLE_ADMIN)
+- ✅ Input validation & XSS sanitization
+- ✅ Global exception handling
+- ✅ Swagger/OpenAPI documentation
+- ✅ Comprehensive test coverage (107 tests)
 
 ### In Progress 🚧
-- [ ] Captain login endpoint
-- [ ] Captain profile management
 - [ ] Ride management (create, accept, track)
 - [ ] Real-time location tracking
 - [ ] WebSocket integration

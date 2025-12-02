@@ -15,6 +15,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -22,14 +24,31 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
-    private final UserDetailService userDetailsService;
+    private final DelegatingDetailsService delegatingDetailsService;
     private final TokenBlacklistService tokenBlacklistService;
 
+    // Public endpoints that should skip JWT authentication
+    private static final List<String> PUBLIC_ENDPOINTS = Arrays.asList(
+            "/api/auth/user/register",
+            "/api/auth/captain/register",
+            "/api/auth/user/login",
+            "/api/auth/captain/login",
+            "/h2-console"
+    );
 
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+
+        String requestURI = request.getRequestURI();
+
+        // Skip JWT processing for public endpoints
+        if (isPublicEndpoint(requestURI)) {
+            log.debug("Skipping JWT authentication for public endpoint: {}", requestURI);
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         log.debug("AuthTokenFilter called for URI: {}", request.getRequestURI());
 
@@ -48,7 +67,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // Validate and set authentication
             if (jwtToken != null && !jwtToken.isBlank() && jwtUtil.validateJwtToken(jwtToken)){
                 String username = jwtUtil.getUsernameFromToken(jwtToken);
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                UserDetails userDetails = delegatingDetailsService.loadUserByUsername(username);
                 UsernamePasswordAuthenticationToken authentication
                         = new UsernamePasswordAuthenticationToken(userDetails,null,userDetails.getAuthorities());
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
@@ -60,6 +79,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             SecurityContextHolder.clearContext();
         }
         filterChain.doFilter(request,response);
+    }
+
+    private boolean isPublicEndpoint(String requestURI) {
+        return PUBLIC_ENDPOINTS.stream()
+                .anyMatch(requestURI::startsWith);
     }
 
     private String parseJwt(HttpServletRequest request) {

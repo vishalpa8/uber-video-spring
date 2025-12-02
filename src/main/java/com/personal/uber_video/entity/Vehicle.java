@@ -3,8 +3,6 @@ package com.personal.uber_video.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.personal.uber_video.model.VehicleType;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -32,8 +30,7 @@ public class Vehicle {
     @Column(nullable = false, unique = true)
     private String plate;
 
-    @Min(value = 2, message = "Capacity must be at least 2")
-    @Max(value = 8, message = "Capacity must be at most 8")
+    @Column(nullable = false)
     private int capacity;
 
     // Inverse side of the relationship - Captain is the owner
